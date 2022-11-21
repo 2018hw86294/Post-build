@@ -1,0 +1,54 @@
+---
+- include_vars: "vars/{{ hostvars[inventory hostname]['DC_code'] }}/{{ hostvars[inventory_hostname]['resolver_domain'] }}/{{hostvars[inventory_hostname]['LC_code'] }}.yml"
+- name: Add listed users to local admin group
+  win_command: powershell.exe -
+  args:
+  stdin: (Get-WmiObject Win32 ComputerSystem). Domain
+  register: domain_status
+
+- debug:
+   var: domain_status.stdout_lines
+
+#vars:
+#ad_domain: '*****"
+#domain_user: 'svc-mclddomjoin_prod 
+#nameservers: "{{ list_of_nameservers.split('\n') }}"
+  #vars prompt:
+  #- name:'domain_admin_pass'
+    #prompt: "enter pass"
+    #private: yes
+
+    #- name: Copy keytab file
+      #win_copy:
+      #src: /local/apps/.keys/svc-mclddomjoin.keytab 
+      #dest: c:\svc-mclddomjoin.keytab
+
+- name: Adding DNS Servers
+win_dns_client:
+  adapter_names: "*"
+  ipv4 addresses:
+    - "{{nameserver1 }}"
+    - "{{nameserver2 }}"
+
+#with_items: "{{ nameservers }}"
+
+#- name: Win Reboot
+#  win_reboot:
+
+- name: Windows Domain join command 
+  win _domain_membership:
+  dns_domain_name: "{{ fqdn }}"
+  #domain_admin_user: "{{ fqdn }}\\{{ ADMIN_ID}}" domain_admin_user: "{{ ADMIN_ID}}"
+  domain_admin_password: {{ ADMIN_PASSWORD }}' domain_ou_path: "{{ domain_path}}"
+  state: domain
+register: domain_state
+become method: runas
+#become_user: Administrator
+ignore_errors: True
+retries: 2
+delay: 3
+until: domain state is succeeded
+
+- name: Win Reboot
+  win_reboot:
+  when: domain_state is succeeded
