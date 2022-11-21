@@ -7,5 +7,5 @@
     ansible_port: 5986
 become_method: runas
 roles:
-   -grouppolicy
-   -report
+   - grouppolicy
+   - report
