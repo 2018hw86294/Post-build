@@ -1,0 +1,41 @@
+---
+- include_vars: vars/commands.yml
+- name: Get latest facts
+  setup:
+    gather_subset:
+      - all
+
+- name: Run all commands
+  win shell: "{{item.value}}"
+  register: cmd
+  ignore_errors: true
+  with_dict:
+       - "{{commands}}"
+
+- name: Generate report.
+  template: 
+  src: templates/report.j2
+  dest: /tmp/server_report.html 
+  delegate_to: localhost
+
+- name: Sending mail
+  mail:
+    subject: 'Windows Post task completed
+    body: "{{ lookup('template', 'templates/mail.j2') }}" 
+    to: ***
+    cc: 2018hw86294@bits-pilani.ac.in
+    subtype: html
+    attach: /tmp/server_report.html 
+delegate to: localhost
+run once: true
+check_mode: no 
+become: false
+
+- name: Remove File
+file:
+   path: /tmp/server_report.html
+   state: absent
+
+delegate_to: localhost
+run_once: true 
+become: false
