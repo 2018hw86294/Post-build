@@ -5,7 +5,7 @@ vars:
   ansible_user: "{{ADMIN_ID}}"
   ansible_password: "{{ADMIN_PASSWORD}}"
   ansible_port: 5986
-become_method: rudas
+become_method: runas
 roles:
  -grouppolicy
  -report
