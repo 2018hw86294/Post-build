@@ -1,0 +1,24 @@
+---
+
+- name: Get Domain status 
+  win_command: powershell.exe -
+  args:
+    stdin: (Get-WmiObject Win32_ComputerSystem).Domain
+  register: domain_status
+
+- debug:
+    var: domain_status
+
+- set fact: stat={{domain status.stdout_lines.0}}
+
+- debug:
+    var: stat
+
+- name: attempt hostname update only if current doamin_status is workgroup
+  include: computername.yml 
+  when: stat == 'WORKGROUP'
+
+- name: Setup a description for computer name
+- win_command: powershell.exe -
+  args:
+    stdin: Get-CimInstance -ClassName Win32 OperatingSystem Set-Ciminstance Property (Description hostvars[inventory_hostname]["computerdesc"] }}")
