@@ -1,0 +1,56 @@
+---
+#- name: Rename Administrator to Admin0ol if exists 
+# script: Rename_Admin_1.ps1 
+- name: Create temp directory stucture
+  win file:
+    path: "{{ postbuild_path}}" 
+    state: directory
+    
+- name: Set timezone according to location 
+  win command: powershell.exe 
+  args:
+    stdin: Set-TimeZone Id "{{ time zone }}" 
+  ignore_errors: True
+- name: Rename Ethernet to IP address 
+  win_command: powershell.exe -
+  args:
+    stdin: Rename-NetAdapter -Name "Et" -NewName "{{ inventory_hostname }}" 
+  ignore_errors: True 
+  when: "ProLiant" not in ansible_product_name"
+
+- name: disable IPV6
+  win_command: powershell.exe -
+  args:
+    stdin: Disable-NetAdapterBinding Name
+    ignore_errors: True
+
+#- name: Download MDE-post installion_script
+# win_get_url:
+#      url: http://**/Windows/MDE/Start-Postinstall.ps1
+#      dest: " postbuild_path}}\\Start-Postinstall.ps1"
+
+#- name: Configure MDE
+# win shell: [[ postbuild_path}}\\Start-Postinstall.ps1 
+#- name: Restart service httpd, in all cases
+# ansible.builtin.service:
+# name: HealthService
+# state: restarted
+
+- name: Disable UAC
+  win_command: powershell.exe -
+  args:
+    stdin: New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\policie 
+  ignore_errors: True
+ 
+- name: Add service-accounts and required user accounts to Administrator group 
+  win_command: powershell.exe -
+  args: 
+    stdin: net localgroup Administrators /add {{ item }}
+  with_items:
+      - "{{ user_admin }}" 
+      ignore_errors: True
+
+- name: Delete temp directory stucture
+  win_file:
+   path: "{{ postbuild_path}}" 
+   state: absent
